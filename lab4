@@ -1,0 +1,62 @@
+using System;
+using System.IO;
+using System.Reflection.Metadata;
+
+Console.WriteLine("Enter directory path using a space, comma or semicolon as separators: ");
+//Робота з вказаним каталогом (передається як параметр утиліти)
+string input = Console.ReadLine();
+//Режим підказки: підтримується
+if(input == "/?")
+{
+    Console.WriteLine(@"You can write some directory paths using a space "" "", comma "","" or semicolon "";"" as separators.");
+    Console.Write("Also you can use some file types to find (*.txt, *.exe, *.log, *.*)");
+    Environment.Exit(0);
+}
+Console.WriteLine("Enter type of files you need to count(*.txt, *.exe, *.log, *.*): ");
+//Робота з вказаними файлами за шаблоном (наприклад, *.exe)
+string fileType = Console.ReadLine();
+char[] separators = { ' ', ',', ';' };
+//Розбір та інтерпретація параметрів командного рядка:змінне число параметрів
+string[] path = input.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+int countFiles = 0;
+int countHidden = 0;
+int countReadOnly = 0;
+int countArchive = 0;
+foreach (string p in path)
+{   
+    try
+    {
+        countFiles = Directory.GetFiles(p, fileType).Length;      
+    }
+    catch(DirectoryNotFoundException ex)
+    {
+        Console.WriteLine(ex.Message);
+        Console.WriteLine("Directory hasn't found, try another");
+        //Програма формує коди завершення
+        Environment.Exit(1);
+    }
+    //Програмою враховуються атрибути файлів (прихований, тільки читання, архівний)
+    string[] files = Directory.GetFiles(p, fileType);
+    foreach (string file in files)
+    {
+        FileAttributes attributes = File.GetAttributes(file);
+        if ((attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+        {
+            countHidden++;
+        }
+        else if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+        {
+            countReadOnly++;
+        }
+        else if ((attributes & FileAttributes.Archive) == FileAttributes.Archive)
+        {
+            countArchive++;
+        }
+    }
+    Console.WriteLine("There are " + countFiles + " files in this directory " + p);
+    Console.WriteLine("There are " + countHidden + " hidden files in this directory " + p);
+    Console.WriteLine("There are " + countReadOnly + " readonly files in this directory " + p);
+    Console.WriteLine("There are " + countArchive + " archive files in this directory " + p);
+}
+//Програма формує коди завершення
+Environment.Exit(0);
